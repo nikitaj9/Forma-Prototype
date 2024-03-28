@@ -1,53 +1,7 @@
-////////////////////////// 
-Analysis
-
+import { useState, useEffect } from "react";
+import { Forma } from "forma-embedded-view-sdk/auto";
 import { RgbaColor, RgbaColorPicker } from "powerful-color-picker";
 
-export interface Analysis {
-  analysisId: string;
-  analysisType: "sun" | "noise" | string;
-  createdAt: number;
-  proposalId: string;
-  proposalRevision: string;
-  status: string;
-  updatedAt: number;
-}
-
-function App() {
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const projectId = Forma.getProjectId();
-
-  useEffect(() => {
-    async function fetchAnalyses() {
-      try {
-        const response = await Forma.analysis.list({ authcontext: projectId });
-        console.log(response);
-
-        setAnalyses(response as Analysis[]);
-      } catch (error) {
-        console.error("Error fetching analyses:", error);
-      }
-    }
-
-    fetchAnalyses();
-  }, [projectId]);
-
-  return (
-    <div>
-      Welcome to {projectId}
-      {analyses.map((analysis) => (
-        <div key={analysis.analysisId}>
-          <p>Type: {analysis.analysisType}</p>
-          <p>Status: {analysis.status}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export default App;
-
-/////////////////////////////////////////////////////////////////////////////////////////
 const DEFAULT_COLOR = {
   r: 0,
   g: 255,
@@ -102,12 +56,13 @@ function App() {
         <p>Total number of buildings: {buildingPaths?.length}</p>
       </div>
       <RgbaColorPicker color={selectedColor} onChange={setSelectedColor} />
-<div className="section">
-  <button onClick={colorBuildings} disabled={!buildingPaths}>
-    Color buildings
-  </button>
-  <button onClick={reset}>Reset</button>
-</div>
+      <div className="section">
+        <button onClick={colorBuildings} disabled={!buildingPaths}>
+          Color buildings
+        </button>
+        <button onClick={reset}>Reset</button>
+      </div>
     </>
   );
 }
+export default App;
