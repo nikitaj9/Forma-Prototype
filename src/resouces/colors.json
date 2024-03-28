@@ -1,0 +1,20 @@
+{
+    "API": "MY",
+    "Code": "mys_doe",
+    "Categories": [
+        {
+            "Range": "0-50",
+            "Pollutants": [
+                "co",
+                "no2",
+                "o3",
+                "so2",
+                "pm25",
+                "pm10"
+            ],
+            "Category": "Good air quality",
+            "Color_HEX": "#0000FF",
+            "Color_RGB": "(255,0,255)"
+        }
+    ]
+}

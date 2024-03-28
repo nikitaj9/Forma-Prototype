@@ -1,0 +1,113 @@
+////////////////////////// 
+Analysis
+
+import { RgbaColor, RgbaColorPicker } from "powerful-color-picker";
+
+export interface Analysis {
+  analysisId: string;
+  analysisType: "sun" | "noise" | string;
+  createdAt: number;
+  proposalId: string;
+  proposalRevision: string;
+  status: string;
+  updatedAt: number;
+}
+
+function App() {
+  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const projectId = Forma.getProjectId();
+
+  useEffect(() => {
+    async function fetchAnalyses() {
+      try {
+        const response = await Forma.analysis.list({ authcontext: projectId });
+        console.log(response);
+
+        setAnalyses(response as Analysis[]);
+      } catch (error) {
+        console.error("Error fetching analyses:", error);
+      }
+    }
+
+    fetchAnalyses();
+  }, [projectId]);
+
+  return (
+    <div>
+      Welcome to {projectId}
+      {analyses.map((analysis) => (
+        <div key={analysis.analysisId}>
+          <p>Type: {analysis.analysisType}</p>
+          <p>Status: {analysis.status}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default App;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+const DEFAULT_COLOR = {
+  r: 0,
+  g: 255,
+  b: 255,
+  a: 1.0,
+};
+
+function App() {
+  const [buildingPaths, setBuildingPaths] = useState<string[]>([]);
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      Forma.geometry
+        .getPathsByCategory({ category: "building" })
+        .then(setBuildingPaths);
+    };
+    fetchData();
+  }, []);
+
+  const colorBuildings = async () => {
+    const selectedPaths = await Forma.selection.getSelection();
+    console.log(Forma);
+
+    for (let path of selectedPaths) {
+      if (buildingPaths.includes(path)) {
+        const position = await Forma.geometry.getTriangles({
+          path,
+        });
+        const numTriangles = position.length / 3;
+        const color = new Uint8Array(numTriangles * 4);
+        for (let i = 0; i < numTriangles; i += 1) {
+          color[i * 4 + 0] = selectedColor.r;
+          color[i * 4 + 1] = selectedColor.g;
+          color[i * 4 + 2] = selectedColor.b;
+          color[i * 4 + 3] = Math.round(selectedColor.a * 255);
+        }
+        const geometryData = { position, color };
+        Forma.render.updateMesh({ id: path, geometryData });
+      }
+    }
+  };
+
+  const reset = () => {
+    Forma.render.cleanup();
+    setSelectedColor(DEFAULT_COLOR);
+  };
+
+  return (
+    <>
+      <div className="section">
+        <p>Total number of buildings: {buildingPaths?.length}</p>
+      </div>
+      <RgbaColorPicker color={selectedColor} onChange={setSelectedColor} />
+<div className="section">
+  <button onClick={colorBuildings} disabled={!buildingPaths}>
+    Color buildings
+  </button>
+  <button onClick={reset}>Reset</button>
+</div>
+    </>
+  );
+}
