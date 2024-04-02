@@ -45,6 +45,8 @@ function BuildingSelection() {
 
   async function colorBuildings() {
     const pos = await Forma.designTool.getPolygon();
+    const buildingPloygon = cereate;
+
     console.log(pos);
   }
 
