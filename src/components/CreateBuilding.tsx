@@ -1,57 +1,102 @@
 import { Forma } from "forma-embedded-view-sdk/auto";
 import { Vec3 } from "forma-embedded-view-sdk/design-tool";
+import { useState } from "react";
 
 function CreateBuilding() {
-  function cereateBuildingPolygon(points: Vec3[]) {
-    console.log("points", points);
-    const demo = (polygon: [number, number][]) => {
+  const [floorCount, setFloorCount] = useState(5);
+  const [floorHeight, setFloorHeight] = useState(3);
+
+  function createBuildingPolygon(
+    points: Vec3[],
+    floorCount: number,
+    floorHeight: number
+  ): { polygon: [number, number][]; height: number }[] {
+    const jitterPolygon = (
+      polygon: [number, number][],
+      iteration: number
+    ): [number, number][] => {
       return polygon.map(
         ([x, y]) =>
-          [x + Math.random() * 2, y + Math.random() * 2] as [number, number]
+          [
+            x + Math.random() * iteration * 0.1,
+            y + Math.random() * iteration * 0.1,
+          ] as [number, number]
       );
     };
-    const inputpoly: [number, number][] = points.map(
+
+    const inputPoly: [number, number][] = points.map(
       (point) => [point.x, point.y] as [number, number]
     );
 
-    console.log("inputpoly", inputpoly);
+    let buildingPolygons: { polygon: [number, number][]; height: number }[] =
+      [];
+    for (let i = 0; i < floorCount; i++) {
+      buildingPolygons.push({
+        polygon: jitterPolygon(inputPoly, i + 1),
+        height: floorHeight,
+      });
+    }
 
-    return Array(5).fill(inputpoly).map(demo);
+    return buildingPolygons;
   }
 
-  const creatBuildingsFloors = async (): Promise<void> => {
+  const createBuildingsFloors = async () => {
     const pos: Vec3[] = await Forma.designTool.getPolygon();
 
-    const buildingPloygons = cereateBuildingPolygon(pos);
+    const floorsData = await createBuildingPolygon(
+      pos,
+      floorCount,
+      floorHeight
+    );
 
-    console.log(buildingPloygons);
+    const urn = await Forma.elements.floorStack.createFromFloors({
+      floors: floorsData,
+    });
+    console.log("Created building element:", urn);
 
-    const urn: { urn: string } =
-      await Forma.elements.floorStack.createFromFloors({
-        floors: buildingPloygons.map(
-          (
-            buildingPloygon
-          ): {
-            polygon: [number, number][];
-            height: number;
-          } => {
-            console.log("buildingPloygons", buildingPloygons);
-
-            return {
-              polygon: buildingPloygon,
-              height: 3,
-            };
-          }
-        ),
-      });
-    console.log("element", urn);
     const elevation = pos[0].z;
     const transform = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, elevation, 1];
     await Forma.proposal.addElement({ ...urn, transform });
   };
+
+  const analyzeSunlight = async () => {
+    const currentlySelected = await Forma.selection.getSelection();
+    console.log(currentlySelected);
+
+    try {
+      const analysisId = await Forma.analysis.triggerSun({
+        selectedElementPaths: currentlySelected,
+        month: 6,
+        date: 21,
+      });
+      console.log("Sunlight analysis initiated, ID:", analysisId);
+    } catch (error) {
+      console.error("Error triggering sun analysis:", error);
+    }
+  };
+
   return (
     <div>
-      <button onClick={creatBuildingsFloors}>Click Here</button>
+      <label>
+        Floor Count:
+        <input
+          type="number"
+          value={floorCount}
+          onChange={(e) => setFloorCount(parseInt(e.target.value))}
+        />
+      </label>
+      <br />
+      <label>
+        Floor Height:
+        <input
+          type="number"
+          value={floorHeight}
+          onChange={(e) => setFloorHeight(parseInt(e.target.value))}
+        />
+      </label>
+      <br />
+      <button onClick={createBuildingsFloors}>Create Building</button>
+      <button onClick={analyzeSunlight}>Analyze Sunlight</button>
     </div>
   );
 }
