@@ -6,7 +6,7 @@ import { Forma } from "forma-embedded-view-sdk/auto";
 async function getGeoLocation() {
 
   try {
-    const apiKey = "21fd035fbe9a76eec863aa62a86b46dd";
+    const apiKey = "";
 
     // Get latitude and longitude of the selected area
     const response = await Forma.project.getGeoLocation();
